@@ -1,10 +1,11 @@
 package org.example;
 
-import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -15,24 +16,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class CrearReporte {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrearReporte.class);
+
     public void crearExcel(List<Listado> listadoList) {
 
-        HSSFWorkbook workbook = new HSSFWorkbook();
+        try(HSSFWorkbook workbook = new HSSFWorkbook()) {
 
-        HSSFSheet sheet = workbook.createSheet("Reporte");
+            HSSFSheet sheet = workbook.createSheet("Reporte");
 
-        crearCabecera(sheet);
+            crearCabecera(sheet);
 
-        crearDetalles(sheet, listadoList);
+            crearDetalles(sheet, listadoList);
 
-        try {
             File archivo = new File("reporte.xls");
             FileOutputStream out = new FileOutputStream(archivo);
             workbook.write(out);
             out.close();
-        } catch (IOException e) {
-            System.err.println("ERROR AL CREAR EL ARCHIVO!");
-            e.printStackTrace();
+
+        }catch (IOException e) {
+            LOGGER.error("ERROR AL CREAR EL ARCHIVO!", e);
         }
 
     }
