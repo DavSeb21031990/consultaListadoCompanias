@@ -31,7 +31,7 @@ public class EdgeSearchTest {
     private static final Logger LOGGER = LoggerFactory.getLogger(EdgeSearchTest.class);
 
     @Test
-    public void testEdgePage() {
+    public void testEdgePage() throws InterruptedException {
 
         System.setProperty("webdriver.edge.driver", "./src/main/resources/edgeDriver/msedgedriver.exe");
         //System.setProperty("webdriver.chrome.driver", "./src/main/resources/chromeDriver/chromedriver.exe");
@@ -43,16 +43,24 @@ public class EdgeSearchTest {
         driver.get(URL_LISTADO_COMPAÑIAS);
 
         AtomicInteger nroPagina = new AtomicInteger(1);
-        //int totalPaginas = 1726;
-        int totalPaginas = 2;
+        int totalPaginas = 1726;
+        int paginaInicio = 20;
 
-        setPaginaInicio(1);
+        try {
+            setPaginaInicio(paginaInicio);
 
-        for (int i = 1; i < totalPaginas; i++) {
-            System.out.println("Nro Pagina: " + i);
-            recorrerLista();
-            cambiarPagina();
-            driver.manage().timeouts().implicitlyWait(60, TimeUnit.SECONDS);
+            for (int i = paginaInicio; i < totalPaginas; i++) {
+                System.out.println("Nro Pagina: " + i);
+                recorrerLista();
+                cambiarPagina();
+                Thread.sleep(5000);
+            }
+        } catch (Exception e) {
+
+            e.printStackTrace();
+            CrearReporte crearReporte = new CrearReporte();
+            crearReporte.crearExcel(listadoList);
+
         }
 
         CrearReporte crearReporte = new CrearReporte();
@@ -60,7 +68,7 @@ public class EdgeSearchTest {
 
     }
 
-    private void recorrerLista(){
+    private void recorrerLista() throws InterruptedException {
 
         String id;
         String identificacion;
@@ -73,38 +81,50 @@ public class EdgeSearchTest {
 
         for (int i = 1; i <= rowSize; i++) {
 
-            id = driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr["+i+"]/td["+ 2 +"]")).getText();
-            identificacion = driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr["+i+"]/td["+ 3 +"]")).getText();
-            nombre = driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr["+i+"]/td["+ 4 +"]")).getText();
-            abrir(driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr["+i+"]/td["+ 2 +"]")));
+            id = driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr[" + i + "]/td[" + 2 + "]")).getText();
+            identificacion = driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr[" + i + "]/td[" + 3 + "]")).getText();
+            nombre = driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr[" + i + "]/td[" + 4 + "]")).getText();
+            abrir(driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr[" + i + "]/td[" + 2 + "]")));
             reidreccionarAPaginaConsulta(id, identificacion, nombre);
 
-            System.out.println("Registo: " + i +" - " + rowSize);
+            //System.out.println("Registo: " + i + " - " + rowSize);
 
         }
 
     }
 
-    private void abrir(WebElement webElement){
+    private void abrir(WebElement webElement) {
         String s = Keys.chord(Keys.CONTROL, Keys.ENTER);
         webElement.findElements(By.tagName("a")).get(0).sendKeys(s);
     }
 
-    private void reidreccionarAPaginaConsulta(String id, String identificacion, String nombre){
+    private void reidreccionarAPaginaConsulta(String id, String identificacion, String nombre) throws InterruptedException {
 
         WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(120, 1));
         wait.until(numberOfWindowsToBe(2));
+
+        Thread.sleep(4000);
 
         ArrayList<String> tabs = new ArrayList<>(driver.getWindowHandles());
         int PAGINA_CONSULTA = 1;
         driver.switchTo().window(tabs.get(PAGINA_CONSULTA));
 
-        String correo1 = obtenerCorreo(identificacion, nombre, "//*[@id=\"frmInformacionCompanias:j_idt85:j_idt253\"]");
-        String correo2 = obtenerCorreo(identificacion, nombre, "//*[@id=\"frmInformacionCompanias:j_idt85:j_idt258\"]");
+        String correo1 = obtenerCorreo(identificacion, nombre, "/html/body/div[3]/div/form/span/div/div/table[2]/tbody/tr[2]/td/div/div[6]/table/tbody/tr[2]/td[8]/input");
+        String correo2 = obtenerCorreo(identificacion, nombre, "//*[@id=\"frmInformacionCompanias:j_idt106:j_idt383\"]");
+
+        String selector = "#frmInformacionCompanias\\:j_idt106\\:j_idt373";
+        String selector1 = "#frmInformacionCompanias\\:j_idt106\\:j_idt383";
+
+        correo1 = obtenerCorreo(identificacion, nombre, selector);
+        correo2 = obtenerCorreo(identificacion, nombre, selector1);
 
         Listado listado = new Listado(identificacion, nombre, correo1, correo2);
 
-        agregarLinea(id, listado);
+        System.out.println(listado.toString());
+
+        listadoList.add(listado);
+
+        //agregarLinea(id, listado);
 
         driver.close();
 
@@ -113,41 +133,26 @@ public class EdgeSearchTest {
 
     }
 
-    private void agregarLinea(String id, Listado listado){
-        try
-        {
-            String filePath = "./src/main/resources/reporte.txt";
-            FileOutputStream f = new FileOutputStream(filePath, true);
-            String lineToAppend = "\r\n"+id+";"+listado.getIdentificacion()+";"+listado.getNombre()+";"+
-                    listado.getCorreo1()+";"+listado.getCorreo2();
-            byte[] byteArr = lineToAppend.getBytes();
-            f.write(byteArr);
-            f.close();
-        }
-        catch(Exception e)
-        {
-            System.out.println(e);
-        }
-    }
+    private void setPaginaInicio(int paginaInicio) throws InterruptedException {
 
-    private void setPaginaInicio(int paginaInicio){
-
-        for (int i = 1; i <paginaInicio ; i++) {
+        for (int i = 1; i < paginaInicio; i++) {
             cambiarPagina();
+            Thread.sleep(4000);
         }
 
     }
 
-    private void cambiarPagina(){
+    private void cambiarPagina() {
         WebElement webElement = driver.findElements(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_paginator_bottom\"]/a[3]")).get(0);
-        JavascriptExecutor js = (JavascriptExecutor)driver;
+        JavascriptExecutor js = (JavascriptExecutor) driver;
         js.executeScript("arguments[0].click()", webElement);
     }
 
-    private String obtenerCorreo(String identificacion, String nombre, String componente){
-        try{
-            return driver.findElement(By.xpath(componente)).getAttribute("value");
-        }catch (Exception e){
+    private String obtenerCorreo(String identificacion, String nombre, String componente) {
+        try {
+            //return driver.findElement(By.xpath(componente)).getAttribute("value");
+            return driver.findElement(By.cssSelector(componente)).getAttribute("value");
+        } catch (Exception e) {
             LOGGER.error("Identificacion: " + identificacion + " Nombre: " + nombre + " - ", e);
             return "";
         }

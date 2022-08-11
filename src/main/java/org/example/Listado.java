@@ -14,4 +14,13 @@ public class Listado {
     private String correo1;
     private String correo2;
 
+    @Override
+    public String toString() {
+        return "Listado{" +
+                "identificacion='" + identificacion + '\'' +
+                ", nombre='" + nombre + '\'' +
+                ", correo1='" + correo1 + '\'' +
+                ", correo2='" + correo2 + '\'' +
+                '}';
+    }
 }
