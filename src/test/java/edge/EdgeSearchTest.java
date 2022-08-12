@@ -8,6 +8,7 @@ import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,7 @@ public class EdgeSearchTest {
 
     private final List<Listado> listadoList = new ArrayList<>();
     private WebDriver driver;
+    private WebDriverWait wait;
 
     private static final String URL_LISTADO_COMPAÑIAS = "https://mercadodevalores.supercias.gob.ec/reportes/directorioCompanias.jsf";
 
@@ -42,9 +44,15 @@ public class EdgeSearchTest {
         driver.manage().window().minimize();
         driver.get(URL_LISTADO_COMPAÑIAS);
 
+        wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        Select dropdown = new Select(find("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias:j_id20\"]"));
+        dropdown.selectByVisibleText("1000");
+
+        Thread.sleep(5000);
+
         AtomicInteger nroPagina = new AtomicInteger(1);
-        int totalPaginas = 1726;
-        int paginaInicio = 20;
+        int totalPaginas = 3;
+        int paginaInicio = 1;
 
         try {
             setPaginaInicio(paginaInicio);
@@ -66,6 +74,10 @@ public class EdgeSearchTest {
         CrearReporte crearReporte = new CrearReporte();
         crearReporte.crearExcel(listadoList);
 
+    }
+
+    private WebElement find(String locator){
+        return wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath(locator)));
     }
 
     private void recorrerLista() throws InterruptedException {
@@ -109,11 +121,12 @@ public class EdgeSearchTest {
         int PAGINA_CONSULTA = 1;
         driver.switchTo().window(tabs.get(PAGINA_CONSULTA));
 
-        String correo1 = obtenerCorreo(identificacion, nombre, "/html/body/div[3]/div/form/span/div/div/table[2]/tbody/tr[2]/td/div/div[6]/table/tbody/tr[2]/td[8]/input");
-        String correo2 = obtenerCorreo(identificacion, nombre, "//*[@id=\"frmInformacionCompanias:j_idt106:j_idt383\"]");
+        String correo1 = obtenerCorreo(identificacion, nombre, "//*[@id=\"frmInformacionCompanias:j_idt85:j_idt253\"]");
+        String correo2 = obtenerCorreo(identificacion, nombre, "//*[@id=\"frmInformacionCompanias:j_idt85:j_idt258\"]");
 
-        String selector = "#frmInformacionCompanias\\:j_idt106\\:j_idt373";
-        String selector1 = "#frmInformacionCompanias\\:j_idt106\\:j_idt383";
+        //String selector = "#frmInformacionCompanias\\:j_idt106\\:j_idt373";
+        String selector = "#frmInformacionCompanias\\:j_idt85\\:j_idt253";
+        String selector1 = "#frmInformacionCompanias\\:j_idt85\\:j_idt258";
 
         correo1 = obtenerCorreo(identificacion, nombre, selector);
         correo2 = obtenerCorreo(identificacion, nombre, selector1);
