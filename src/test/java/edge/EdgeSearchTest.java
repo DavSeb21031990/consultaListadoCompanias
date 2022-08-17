@@ -14,8 +14,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.FileOutputStream;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +39,10 @@ public class EdgeSearchTest {
     @Test
     public void testEdgePage() throws InterruptedException {
 
+        DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        Date date = new Date();
+        System.out.println(dateFormat.format(date));
+
         System.setProperty("webdriver.edge.driver", "./src/main/resources/edgeDriver/msedgedriver.exe");
         //System.setProperty("webdriver.chrome.driver", "./src/main/resources/chromeDriver/chromedriver.exe");
         //System.setProperty("webdriver.gecko.driver", "./src/main/resources/firefoxDriver/geckodriver.exe");
@@ -51,8 +59,8 @@ public class EdgeSearchTest {
         Thread.sleep(5000);
 
         AtomicInteger nroPagina = new AtomicInteger(1);
-        int totalPaginas = 3;
-        int paginaInicio = 1;
+        int totalPaginas = 9;
+        int paginaInicio = 8;
 
         try {
             setPaginaInicio(paginaInicio);
@@ -67,12 +75,20 @@ public class EdgeSearchTest {
 
             e.printStackTrace();
             CrearReporte crearReporte = new CrearReporte();
-            crearReporte.crearExcel(listadoList);
+            crearReporte.crearExcel(listadoList, paginaInicio);
+
+            dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+            Calendar cal = Calendar.getInstance();
+            System.out.println(dateFormat.format(cal));
 
         }
 
         CrearReporte crearReporte = new CrearReporte();
-        crearReporte.crearExcel(listadoList);
+        crearReporte.crearExcel(listadoList, paginaInicio);
+
+        dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+        date = new Date();
+        System.out.println(dateFormat.format(date));
 
     }
 
@@ -99,7 +115,7 @@ public class EdgeSearchTest {
             abrir(driver.findElement(By.xpath("//*[@id=\"j_id404092557_1815f626:tblDirectorioCompanias_data\"]/tr[" + i + "]/td[" + 2 + "]")));
             reidreccionarAPaginaConsulta(id, identificacion, nombre);
 
-            //System.out.println("Registo: " + i + " - " + rowSize);
+            System.out.println("Registo: " + i + " - " + rowSize);
 
         }
 

@@ -18,17 +18,17 @@ public class CrearReporte {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrearReporte.class);
 
-    public void crearExcel(List<Listado> listadoList) {
+    public void crearExcel(List<Listado> listadoList, int pagina) {
 
         try(HSSFWorkbook workbook = new HSSFWorkbook()) {
 
-            HSSFSheet sheet = workbook.createSheet("Reporte");
+            HSSFSheet sheet = workbook.createSheet("Reporte-" + pagina);
 
             crearCabecera(sheet);
 
             crearDetalles(sheet, listadoList);
 
-            File archivo = new File("reporte.xls");
+            File archivo = new File("reporte"+pagina+".xls");
             FileOutputStream out = new FileOutputStream(archivo);
             workbook.write(out);
             out.close();
